@@ -89,10 +89,10 @@ class Graph(tk.Canvas):
             y = h - 12 - (v / 100.0) * (h - 24)
             points.extend((x, y))
 
-        # 填充
+        # 填充（Tk Canvas 不支持 alpha，用 6 位色代替半透明）
         fill = list(points)
         fill.extend([points[-2], h - 12, points[0], h - 12])
-        self.create_polygon(*fill, fill="#ff7a5933", outline="")
+        self.create_polygon(*fill, fill="#3d2a2b", outline="")
 
         # 折线
         self.create_line(*points, fill=COLOR_CPU, width=2, smooth=True)
