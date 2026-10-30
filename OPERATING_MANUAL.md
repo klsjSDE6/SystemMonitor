@@ -1,34 +1,33 @@
-# SystemMonitor 系统监控程序 —— 操作手册
+# ◢◤ SYSMON 系统遥测终端 —— 操作手册
 
-> **版本**：v1.0  **更新时间**：2026-10-30  **代码库**：https://github.com/klsjSDE6/SystemMonitor
+> **版本**：v2.0（科幻版）  **更新**：2026-10-30  **代码库**：https://github.com/klsjSDE6/SystemMonitor
 
 ---
 
 ## 一、项目概述
 
-基于 **Python + psutil + Tkinter** 实现的桌面端系统实时监控工具，覆盖课程作业要求的全部四项指标：
+基于 **Python + psutil + Tkinter** 实现的科幻风桌面系统监控终端，覆盖五大监控指标：
 
-| 指标 | 说明 | psutil API |
-| --- | --- | --- |
-| 磁盘使用率 | 各分区总容量、已用、剩余、使用率 | `psutil.disk_usage()` |
-| CPU 占用率 | 整体 + 每核心实时占用（折线图展示） | `psutil.cpu_percent(percpu=True)` |
-| 网络收发速率 | 所有网卡的实时上行/下行速率 | `psutil.net_io_counters(pernic=True)` + 差值计算 |
-| 磁盘 IO 读写速率 | 磁盘读/写字节数、速率 | `psutil.disk_io_counters(perdisk=True)` + 差值计算 |
+| # | 指标 | 说明 | psutil API |
+| --- | --- | --- | --- |
+| 1 | CPU 占用率 | 整体 + 每核心实时占用，60 秒遥测折线图 | `cpu_percent(percpu=True)` |
+| 2 | 网络收发速率 | 实时上行/下行速率，单位自动换算 | `net_io_counters()` 差值 ÷ 间隔 |
+| 3 | 磁盘 IO 读写速率 | 读/写速率 MB/s + 进度条 | `disk_io_counters()` 差值 ÷ 间隔 |
+| 4 | 磁盘使用率 | 各分区容量、已用、使用率，可切换 | `disk_partitions()` + `disk_usage()` |
+| 5 | **进程信息** | 进程总数 + TOP 12 进程（PID/名称/CPU%/内存） | `process_iter()` + `cpu_percent()` / `memory_percent()` / `memory_info()` |
 
 ### 技术栈
 
 ```
-Python ≥ 3.8  ·  psutil ≥ 5.9.0（系统信息采集）  ·  Tkinter（Python 标准库 GUI）
+Python ≥ 3.8  ·  psutil ≥ 5.9.0（系统采集）  ·  Tkinter + tk.Canvas（GUI，零第三方绘图库）
 ```
 
-### 功能特点
+### v2.0 科幻风特性
 
-- ✅ **深色主题**，护眼、信息层次清晰
-- ✅ **实时折线图**（CPU 最近 60 秒趋势）
-- ✅ **可调节采样周期**（默认 1000ms，最快 200ms）
-- ✅ **暂停/恢复** 实时刷新（方便截图、对比数据）
-- ✅ **多分区支持**（自动枚举所有磁盘，可下拉切换）
-- ✅ **跨平台**（Windows / macOS / Linux 均支持，psutil 提供平台适配）
+- 🛰️ **深空配色**：`#05080f` 深空黑底 + 霓虹青/绿/紫/琥珀四色数据通道
+- 📟 **终端字体**：全界面等宽 Consolas + 角标装饰符 `◢ ⟨ ⟩ ▸ │`
+- ✨ **拟发光动效**：折线图末端光点、进度条末端亮斑
+- 🚨 **进程告警**：CPU ≥ 20% 的进程红色高亮；状态灯 ONLINE(绿) / HOLD(红)
 
 ---
 
@@ -36,210 +35,168 @@ Python ≥ 3.8  ·  psutil ≥ 5.9.0（系统信息采集）  ·  Tkinter（Pyth
 
 | 项目 | 要求 |
 | --- | --- |
-| 操作系统 | Windows 10/11、macOS 12+、Linux（主流发行版） |
-| Python 版本 | 3.8 ~ 3.12（推荐 3.10+） |
-| 依赖库 | 仅 `psutil`（其他均为 Python 标准库） |
-| 屏幕分辨率 | 最低 1024×768（推荐 1280×800 以上） |
+| 操作系统 | Windows 10/11、macOS 12+、Linux 主流发行版 |
+| Python | 3.8 ~ 3.12 |
+| 依赖 | 仅 `psutil` |
+| 屏幕 | 最低 1024×768（推荐 1920×1080 以上，程序最大化展示效果最佳） |
 
-### 安装 Python（Windows）
-
-若未安装 Python 3.8+：
-1. 访问 [Python 官网](https://www.python.org/downloads/) 下载最新稳定版（如 3.12.x）；
-2. 运行安装包时**务必勾选「Add Python to PATH」**；
-3. 安装完成后，`Win + R` → 输入 `python --version` 应能看到版本号。
+Windows 未装 Python：到 [python.org](https://www.python.org/downloads/) 下载安装，**勾选 Add Python to PATH**。
 
 ---
 
-## 三、安装与启动
-
-### 步骤 1：克隆仓库
+## 三、安装与启动（3 步）
 
 ```bash
+# 1. 克隆（或 GitHub 页面 Code → Download ZIP 解压）
 git clone https://github.com/klsjSDE6/SystemMonitor.git
 cd SystemMonitor
-```
 
-**若没有 git**：直接在 GitHub 仓库页面点击 `Code` → `Download ZIP` → 解压到任意目录。
-
-### 步骤 2：安装依赖
-
-```bash
+# 2. 安装依赖（国内慢可加 -i https://pypi.tuna.tsinghua.edu.cn/simple）
 pip install -r requirements.txt
-```
 
-> 💡 依赖只有 `psutil` 一个，若网络慢可加国内镜像：`pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple`
-
-### 步骤 3：启动程序
-
-```bash
+# 3. 启动
 python gui.py
 ```
 
-启动后应弹出标题为 **「SystemMonitor 系统监控」** 的深色窗口，约 1 秒后数据开始刷新。
+启动后弹出标题为 **「SYSMON // SYSTEM TELEMETRY TERMINAL」** 的深色窗口，约 1 秒后数据开始滚动。
 
 ---
 
 ## 四、界面详解
 
-启动后的主界面如下图所示：
+![主界面全屏图](docs/screenshots/01_main_interface.png)
+▲ 全屏运行实况（2560×1600 物理像素截图）
 
-![SystemMonitor 主界面](screenshots/01_main_interface.png)
-
-### 4.1 顶部工具栏（左 → 右）
+### 4.1 顶部区域（左 → 右）
 
 | 控件 | 功能 |
 | --- | --- |
-| **⏸ 暂停** 按钮 | 暂停/恢复所有数据的实时刷新。暂停后按钮变为 `▶ 继续`，所有指标保持最后一次采样值不变 |
-| **磁盘分区** 下拉框 | 默认显示系统盘（Windows 上为 `C:`），可下拉切换查看其他分区的使用率 |
-| **采样周期** 下拉框 | 可选 `200ms / 500ms / 1s / 2s / 5s`，默认 1 秒。采样越密数据越实时，但占用更多 CPU |
-| **右上角数值** | 实时显示当前采样周期下的核心指标摘要（可选扩展位） |
+| `◢◤ SYSMON // SYSTEM TELEMETRY TERMINAL v2.0` | 终端标题 |
+| `● ONLINE` / `◌ HOLD` | **状态灯**：绿色=实时刷新中，红色=已暂停 |
+| `⟨ PAUSE ⟩` / `⟨ RESUME ⟩` | 暂停/恢复按钮 |
+| `DISK:` 下拉框 | 磁盘分区切换（默认系统盘） |
+| `CYCLE(ms):` 输入框 | 采样周期，200~10000ms，默认 1000 |
 
-### 4.2 四个核心指标面板（上半部分，左 → 右）
+### 4.2 四大指标面板（霓虹色通道）
 
-| 面板 | 显示内容 | 数据来源 |
+| 面板 | 颜色 | 内容 |
 | --- | --- | --- |
-| **💻 CPU 占用率** | 整体占用百分比 + 每核心小柱状图（核心数随 CPU 自动适配） | `psutil.cpu_percent(percpu=True)` |
-| **🌐 网络速率** | 实时上行/下行速率（单位 KB/s 或 MB/s，自动换算） | 连续两次 `net_io_counters()` 差值 ÷ 采样间隔 |
-| **💾 磁盘 IO** | 磁盘读/写速率（MB/s） + 累计读写量 | 连续两次 `disk_io_counters()` 差值 |
-| **📀 磁盘使用率** | 当前选中分区的容量环 + 百分比 + 已用/剩余 GB 数 | `psutil.disk_usage(path)` |
+| ◢ CPU 处理器占用 | 霓虹青 `#00e5ff` | 整体 % 大数值 + 进度条 + 核心数/进程总数 |
+| ◢ NET 网络速率 | 霓虹绿 `#39ff88` | ↓接收 ↑发送（KB/s、MB/s 自动换算）+ 量程进度条 |
+| ◢ I/O 磁盘读写 | 霓虹紫 `#b366ff` | R 读 / W 写速率（MB/s）+ 量程进度条 |
+| ◢ DSK 磁盘使用率 | 琥珀 `#ffb454` | 使用率 % + 已用/总量 GB + 进度条 |
 
-### 4.3 下半部分：CPU 趋势折线图
+### 4.3 左下：CPU 遥测折线图
 
-- **横轴**：最近 60 秒的时间窗口（左旧右新）
-- **纵轴**：0% ~ 100% CPU 占用
-- **刷新逻辑**：每次采样都把当前值推入队列，超过 60 个点则丢弃最早的
-- **暂停时**：折线图停止滚动，保持暂停瞬间的 60 秒趋势线
+- 横轴为最近 **60 秒**时间窗，纵轴 0~100%
+- 霓虹青折线 + 暗青渐变填充 + **末端光点**跟随最新值
+- 虚线网格：横向每 25%、纵向每 10 秒
+- 暂停时曲线冻结
 
-### 4.4 底部详细信息区
+### 4.4 右下：◢ PROC 进程监控表 ⭐新增
 
-展开后显示：
-- **每核心 CPU 占用**：单独列出每个逻辑核心的实时百分比（方便观察多核负载是否均衡）
-- **所有磁盘分区列表**：枚举所有已挂载分区的总容量、已用、剩余、使用率
+| 列 | 说明 |
+| --- | --- |
+| `PID` | 进程 ID |
+| `PROCESS` | 进程名（超长截断到 24 字符） |
+| `CPU%` | 该进程自上次采样以来的 CPU 占用率 |
+| `MEM` | 常驻内存（MB） |
+
+- 右上角 `TOTAL xxx` 显示当前进程总数
+- 按 **CPU 占用降序**取 TOP 12
+- **CPU ≥ 20% 的进程整行红色高亮**（快速定位"吃 CPU 大户"）
+- 已自动剔除无意义的 `System Idle Process`（PID 0）
+
+### 4.5 底部状态行
+
+- `▸ CORE MATRIX`：每核心 CPU 占用百分比阵列
+- `▸ VOLUMES`：所有磁盘分区的容量/使用率一览
 
 ---
 
 ## 五、操作指南
 
-### 5.1 基本操作流程
+### 5.1 基本流程
 
 ```mermaid
 graph LR
-A[启动程序 python gui.py] --> B{是否正常显示?}
-B -->|是| C[观察实时数据]
-B -->|否| D[查常见问题章节]
-C --> E[需要截图/对比?]
-E -->|是| F[点击「⏸ 暂停」]
-F --> G[截图 / 记录数据]
-G --> H[点击「▶ 继续」恢复刷新]
-E -->|否| I[调整采样周期]
-I --> J[切换磁盘分区查看]
-J --> K[关闭程序 或 继续观察]
+A[python gui.py 启动] --> B[观察五大指标实时刷新]
+B --> C{需要截图/定格?}
+C -->|是| D[点 ⟨ PAUSE ⟩ 状态灯变 HOLD]
+D --> E[截图/记录]
+E --> F[点 ⟨ RESUME ⟩ 恢复]
+C -->|否| G[切换 DISK 分区 / 调 CYCLE]
+G --> H[查看 PROC 表定位高负载进程]
 ```
 
-### 5.2 暂停/恢复数据刷新
+### 5.2 暂停 / 恢复
 
-**操作**：点击顶部工具栏左侧的 `⏸ 暂停` 按钮
+点击 `⟨ PAUSE ⟩`：所有面板、折线图、进程表定格在最后一帧；状态灯变红 `◌ HOLD`；按钮变为 `⟨ RESUME ⟩`。
 
-**效果**：
-- 所有四个指标面板停止刷新，保持最后一次采样值
-- CPU 折线图停止滚动
-- 按钮文字变为 `▶ 继续`，再次点击恢复实时刷新
+![暂停状态全屏图](docs/screenshots/02_paused_state.png)
+▲ 暂停状态：数据定格，状态灯转红
 
-**适用场景**：
-- 截作业报告里的运行截图（避免数据变化导致截图模糊）
-- 对比同一时刻不同指标之间的相关性
-- 做演示时让观众看清数值
+### 5.3 采样周期参考
 
-![暂停状态截图](screenshots/02_paused_state.png)
-
-### 5.3 切换磁盘分区
-
-**操作**：点击顶部「磁盘分区」下拉框 → 选择目标分区（如 `D:`、`E:`）
-
-**效果**：`📀 磁盘使用率` 面板立刻显示新分区的容量和使用率，其他面板（CPU/网络/IO）不受影响。
-
-### 5.4 调整采样周期
-
-**操作**：点击顶部「采样周期」下拉框 → 选择新周期
-
-| 周期选项 | 适用场景 | CPU 占用影响 |
+| 周期 | 场景 | 自身 CPU 占用 |
 | --- | --- | --- |
-| 200ms | 高速网络/磁盘速率监控 | 略高（<5%） |
-| 500ms | 平衡方案（推荐日常用） | 低（<2%） |
-| **1s（默认）** | 常规系统监控 | 极低（<1%） |
-| 2s / 5s | 低功耗场景、远程服务器 | 几乎为零 |
+| 200~500ms | 捕捉瞬时峰值 | 略高（进程遍历较频繁） |
+| **1000ms（默认）** | 日常监控 | 低 |
+| 2000~5000ms | 低配机器/挂机 | 极低 |
+
+> ⚠️ 进程表遍历全系统进程，采样周期越小开销越大；低配机器建议 ≥1000ms。
+
+### 5.4 用进程表排查卡顿
+
+1. 感觉电脑卡 → 看 ◢ PROC 表
+2. 红色高亮行 = CPU ≥ 20% 的进程
+3. 对照 PID 在任务管理器中确认/结束对应进程
 
 ---
 
-## 六、作业要求对应说明
+## 六、作业要求对应表
 
-| 作业要求 | 本程序实现位置 | 说明 |
-| --- | --- | --- |
-| ① 图形用户界面 | `gui.py`（Tkinter，380+ 行） | 深色主题 + Tab 式布局 + 实时折线图 |
-| ② 代码提交到 GitHub | https://github.com/klsjSDE6/SystemMonitor | 公开仓库，main 分支，2 次提交 |
-| ③ 系统文档 | 本文件 + `README.md` | 框架/技术选型 + 主要功能 + 用户手册 + 代码库地址 |
-| ④ 源码 + 文档压缩提交 | `SystemMonitor_submit.zip` | 包含：源码、README、本手册、运行截图 |
-
----
-
-## 七、常见问题
-
-### Q1：启动时报 `ModuleNotFoundError: No module named 'psutil'`
-
-→ 执行 `pip install psutil` 或 `pip install -r requirements.txt`
-
-### Q2：程序启动后窗口空白或闪退
-
-→ 检查 Python 版本是否 ≥ 3.8：`python --version`
-→ 若为 Windows：确认 `tkinter` 已安装（Tkinter 随 Python 一起安装，若缺失需重装 Python 并勾选「tcl/tk and IDLE」）
-
-### Q3：磁盘使用率面板显示「找不到分区」
-
-→ Windows 上某些移动硬盘、U 盘未挂载盘符时不会出现在下拉框；
-→ 若为 macOS/Linux：分区路径可能是 `/dev/sda1`、`/mnt/data` 等，程序自动枚举所有 `disk_usage()` 可访问的路径。
-
-### Q4：网络速率显示为 0 KB/s
-
-→ 刚启动时的前 1~2 秒会为 0（需要两次采样才能算差值）；
-→ 若持续为 0：检查是否有活动网络连接（打开浏览器访问任意网站）；
-→ VMware / Hyper-V 虚拟网卡可能干扰：程序已自动过滤 down 状态的接口。
-
-### Q5：CPU 折线图出现尖峰或骤降
-
-→ 采样间隔内的瞬时峰值被捕捉到是正常现象；
-→ 若频繁尖峰：适当调大采样周期（如从 1s 改为 2s）；
-→ 若持续 100%：检查是否有高负载进程（任务管理器 → 详细信息 → 按 CPU 排序）。
-
-### Q6：在远程桌面 / 虚拟机中运行
-
-→ 完全支持：`psutil` 是跨平台系统 API 封装，不依赖本地显示器；
-→ 图形界面在无显示器环境下需要虚拟帧缓冲（Linux 上可装 `xvfb` 后用 `xvfb-run python gui.py` 启动）。
-
----
-
-## 八、扩展建议（供后续迭代）
-
-| 扩展方向 | 实现难度 | 说明 |
-| --- | --- | --- |
-| **CSV 导出** | ⭐⭐ | 加一个「导出历史数据」按钮，把 60 秒的采样数据存为 CSV，方便 Excel 分析 |
-| **多指标折线图** | ⭐⭐⭐ | 把网络速率、磁盘 IO 也画成折线图，三条线叠加对比 |
-| **系统托盘常驻** | ⭐⭐ | 缩小到托盘区，右键菜单恢复主窗口、一键暂停、退出 |
-| **阈值告警** | ⭐⭐⭐ | CPU > 90% 时弹窗或闪烁托盘图标，磁盘使用率 > 95% 预警 |
-| **历史趋势归档** | ⭐⭐⭐⭐ | 每小时存一份快照到 SQLite，加一个「查看历史」Tab 拉取 24h/7d 趋势 |
-| **PyInstaller 打包** | ⭐⭐ | `pyinstaller -F -w gui.py` 生成单文件 `.exe`，双击即用 |
-
----
-
-## 九、代码库地址
-
-| 平台 | 地址 |
+| 作业要求 | 实现位置 |
 | --- | --- |
-| GitHub | **https://github.com/klsjSDE6/SystemMonitor** |
+| ① 图形用户界面 | `gui.py`（科幻终端风：面板 + 折线图 + 进程表） |
+| ② 代码提交 GitHub | https://github.com/klsjSDE6/SystemMonitor （main 分支） |
+| ③ 系统文档 | 本手册 + `README.md`（框架/技术、功能、手册、仓库地址） |
+| ④ 源码+文档压缩提交 | `SystemMonitor_submit.zip`（含源码、文档、全屏截图） |
 
-### 快速上手 3 行
+## 七、psutil API 对照表（核心知识点）
 
-```bash
-git clone https://github.com/klsjSDE6/SystemMonitor.git
-cd SystemMonitor && pip install -r requirements.txt
-python gui.py
+```python
+psutil.cpu_percent(interval=None, percpu=True)   # 整体+每核心 CPU%
+psutil.net_io_counters()                         # 网络累计字节（差值算速率）
+psutil.disk_io_counters()                        # 磁盘累计读写（差值算速率）
+psutil.disk_partitions(all=False)                # 已挂载分区
+psutil.disk_usage(mountpoint)                    # 分区容量/使用率
+psutil.process_iter()                            # 遍历进程
+proc.cpu_percent(None)                           # 进程 CPU%（需先预热一次）
+proc.memory_percent() / proc.memory_info().rss   # 进程内存占比 / 常驻内存
 ```
+
+## 八、常见问题
+
+| 问题 | 解决 |
+| --- | --- |
+| `No module named 'psutil'` | `pip install psutil` |
+| 启动闪退/空白 | 确认 Python ≥ 3.8；重装时勾选 tcl/tk |
+| 网络速率前 1~2 秒为 0 | 正常，差值算法需要两次采样 |
+| 进程表某行红色 | 该进程 CPU ≥ 20%，属正常告警高亮 |
+| 看不到 System Idle Process | 程序主动剔除了 PID 0（无监控意义） |
+| 低配机器卡顿 | 把 CYCLE 调到 2000ms 以上 |
+
+## 九、扩展方向
+
+| 方向 | 难度 | 说明 |
+| --- | --- | --- |
+| 进程右键结束 | ⭐⭐ | Treeview 绑右键菜单调 `psutil.Process(pid).terminate()` |
+| CSV 历史导出 | ⭐⭐ | 采样数据追加写 CSV，Excel 可分析 |
+| 多指标折线叠加 | ⭐⭐⭐ | 网络/IO 速率也画进折线图 |
+| 阈值告警音 | ⭐⭐ | CPU>90% 播放提示音 |
+| PyInstaller 打包 | ⭐⭐ | `pyinstaller -F -w gui.py` 单文件 exe |
+
+---
+
+**仓库地址**：https://github.com/klsjSDE6/SystemMonitor

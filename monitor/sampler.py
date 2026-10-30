@@ -23,6 +23,16 @@ class DiskPartition:
 
 
 @dataclass
+class ProcessInfo:
+    """单个进程的资源占用信息."""
+    pid: int
+    name: str
+    cpu_percent: float            # 自上次采样以来的 CPU 占用 %
+    mem_percent: float            # 内存占用 %
+    mem_mb: float                 # 常驻内存 MB
+
+
+@dataclass
 class Sample:
     """一次完整的系统状态采样."""
     timestamp: float
@@ -33,6 +43,8 @@ class Sample:
     net_sent_kbps: float          # 网络发送速率 KB/s
     disk_read_mbps: float         # 磁盘读取速率 MB/s
     disk_write_mbps: float        # 磁盘写入速率 MB/s
+    processes: List[ProcessInfo] = field(default_factory=list)   # TOP 进程（按 CPU 排序）
+    proc_total: int = 0           # 进程总数
 
 
 class SystemSampler:
@@ -42,6 +54,12 @@ class SystemSampler:
         self._last_net = psutil.net_io_counters()
         self._last_disk = psutil.disk_io_counters()
         self._last_ts = time.monotonic()
+        # 预热：进程级 cpu_percent 首次调用恒为 0，先调用一次建立基准
+        for p in psutil.process_iter():
+            try:
+                p.cpu_percent(None)
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                continue
 
     # ------------------------------------------------------------------ 工具
 
@@ -104,6 +122,28 @@ class SystemSampler:
             disk_read_mbps = 0.0
             disk_write_mbps = 0.0
 
+        # 进程信息（按 CPU 占用降序取 TOP N）
+        procs: List[ProcessInfo] = []
+        proc_total = 0
+        for p in psutil.process_iter():
+            try:
+                if p.pid == 0:        # System Idle Process 无意义，剔除
+                    continue
+                cpu_p = p.cpu_percent(None)
+                mem_p = p.memory_percent()
+                mem_mb = p.memory_info().rss / (1024 ** 2)
+                procs.append(ProcessInfo(
+                    pid=p.pid,
+                    name=p.name(),
+                    cpu_percent=round(cpu_p, 1),
+                    mem_percent=round(mem_p, 2),
+                    mem_mb=round(mem_mb, 1),
+                ))
+                proc_total += 1
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                continue
+        procs.sort(key=lambda x: x.cpu_percent, reverse=True)
+
         return Sample(
             timestamp=time.time(),
             cpu_percent=cpu_percent,
@@ -113,4 +153,6 @@ class SystemSampler:
             net_sent_kbps=round(net_sent_kbps, 2),
             disk_read_mbps=round(disk_read_mbps, 2),
             disk_write_mbps=round(disk_write_mbps, 2),
+            processes=procs[:12],   # TOP 12 进程
+            proc_total=proc_total,
         )
